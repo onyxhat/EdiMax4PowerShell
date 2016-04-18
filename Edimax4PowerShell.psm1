@@ -60,9 +60,10 @@ function New-NodeObject() {
     $Node | Add-Member MemberSet PSStandardMembers $PSStandardMembers
     $Node | Add-Member -MemberType NoteProperty -Name Node -Value $NodeAddress
     $Node | Add-Member -MemberType NoteProperty -Name Credential -Value $(Get-Credential -User $Username -Password $Password)
-    $Node | Add-Member -MemberType ScriptProperty -Name State -Value { Get-NodeState -Node $this }
-    $Node | Add-Member -MemberType ScriptMethod -Name On -Value { Set-NodeOn -Node $this }
-    $Node | Add-Member -MemberType ScriptMethod -Name Off -Value { Set-NodeOn -Node $this }
+    $Node | Add-Member -MemberType ScriptProperty -Name State -Value { Get-NodeState }
+    $Node | Add-Member -MemberType ScriptMethod -Name On -Value { Set-NodeOn }
+    $Node | Add-Member -MemberType ScriptMethod -Name Off -Value { Set-NodeOff }
+    $Node | Add-Member -MemberType ScriptMethod -Name Toggle -Value { Toggle-NodeState }
 
     return $Node
 }
@@ -86,34 +87,26 @@ function Get-EdiMaxNodes() {
 }
 
 function Set-NodeOn() {
-    [CmdletBinding()]
-    Param (
-        [psobject]$Node
-    )
-
     [System.Net.ServicePointManager]::Expect100Continue = $false
-    [xml]$State = $(Invoke-WebRequest -Method Post -Uri "http://$($Node.Node):10000/smartplug.cgi" -Body $On -ContentType 'text/xml' -Credential $Node.Credential).Content
+    [xml]$State = $(Invoke-WebRequest -Method Post -Uri "http://$($this.Node):10000/smartplug.cgi" -Body $On -ContentType 'text/xml' -Credential $this.Credential).Content
     return $State.SMARTPLUG.CMD.'Device.System.Power.State'
 }
 
 function Set-NodeOff() {
-    [CmdletBinding()]
-    Param (
-        [psobject]$Node
-    )
-
     [System.Net.ServicePointManager]::Expect100Continue = $false
-    [xml]$State = $(Invoke-WebRequest -Method Post -Uri "http://$($Node.Node):10000/smartplug.cgi" -Body $Off -ContentType 'text/xml' -Credential $Node.Credential).Content
+    [xml]$State = $(Invoke-WebRequest -Method Post -Uri "http://$($this.Node):10000/smartplug.cgi" -Body $Off -ContentType 'text/xml' -Credential $this.Credential).Content
     return $State.SMARTPLUG.CMD.'Device.System.Power.State'
 }
 
 function Get-NodeState() {
-    [CmdletBinding()]
-    Param (
-        [psobject]$Node
-    )
-
     [System.Net.ServicePointManager]::Expect100Continue = $false
-    [xml]$State = $(Invoke-WebRequest -Method Post -Uri "http://$($Node.Node):10000/smartplug.cgi" -Body $GetState -ContentType 'text/xml' -Credential $Node.Credential).Content
+    [xml]$State = $(Invoke-WebRequest -Method Post -Uri "http://$($this.Node):10000/smartplug.cgi" -Body $GetState -ContentType 'text/xml' -Credential $this.Credential).Content
     return $State.SMARTPLUG.CMD.'Device.System.Power.State'
+}
+
+function Toggle-NodeState() {
+    Switch ($this.State) {
+        "ON" { $this.Off() }
+        "OFF" { $this.On() }
+    }
 }
