@@ -59,6 +59,7 @@ function New-NodeObject() {
 
     $Node | Add-Member MemberSet PSStandardMembers $PSStandardMembers
     $Node | Add-Member -MemberType NoteProperty -Name Node -Value $NodeAddress
+    $Node | Add-Member -MemberType NoteProperty -Name Uri -Value "http://${NodeAddress}:10000/smartplug.cgi"
     $Node | Add-Member -MemberType NoteProperty -Name Credential -Value $(Get-Credential -User $Username -Password $Password)
     $Node | Add-Member -MemberType ScriptProperty -Name State -Value { Get-NodeState }
     $Node | Add-Member -MemberType ScriptMethod -Name On -Value { Set-NodeOn }
@@ -88,19 +89,17 @@ function Get-EdiMaxNodes() {
 
 function Set-NodeOn() {
     [System.Net.ServicePointManager]::Expect100Continue = $false
-    [xml]$State = $(Invoke-WebRequest -Method Post -Uri "http://$($this.Node):10000/smartplug.cgi" -Body $On -ContentType 'text/xml' -Credential $this.Credential).Content
-    return $State.SMARTPLUG.CMD.'Device.System.Power.State'
+    Invoke-WebRequest -Method Post -Uri $this.Uri -Body $On -ContentType 'text/xml' -Credential $this.Credential | Out-Null
 }
 
 function Set-NodeOff() {
     [System.Net.ServicePointManager]::Expect100Continue = $false
-    [xml]$State = $(Invoke-WebRequest -Method Post -Uri "http://$($this.Node):10000/smartplug.cgi" -Body $Off -ContentType 'text/xml' -Credential $this.Credential).Content
-    return $State.SMARTPLUG.CMD.'Device.System.Power.State'
+    Invoke-WebRequest -Method Post -Uri $this.Uri -Body $Off -ContentType 'text/xml' -Credential $this.Credential | Out-Null
 }
 
 function Get-NodeState() {
     [System.Net.ServicePointManager]::Expect100Continue = $false
-    [xml]$State = $(Invoke-WebRequest -Method Post -Uri "http://$($this.Node):10000/smartplug.cgi" -Body $GetState -ContentType 'text/xml' -Credential $this.Credential).Content
+    [xml]$State = $(Invoke-WebRequest -Method Post -Uri $this.Uri -Body $GetState -ContentType 'text/xml' -Credential $this.Credential).Content
     return $State.SMARTPLUG.CMD.'Device.System.Power.State'
 }
 
