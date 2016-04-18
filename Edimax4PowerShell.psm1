@@ -51,8 +51,13 @@ function New-NodeObject() {
         [string]$Password
     )
 
+    $defaultProperties = @('Node','State')
+    $defaultDisplayPropertySet = New-Object System.Management.Automation.PSPropertySet('DefaultDisplayPropertySet',[string[]]$defaultProperties)
+    $PSStandardMembers = [System.Management.Automation.PSMemberInfo[]]@($defaultDisplayPropertySet)
+
     $Node = New-Object -TypeName psobject
 
+    $Node | Add-Member MemberSet PSStandardMembers $PSStandardMembers
     $Node | Add-Member -MemberType NoteProperty -Name Node -Value $NodeAddress
     $Node | Add-Member -MemberType NoteProperty -Name Credential -Value $(Get-Credential -User $Username -Password $Password)
     $Node | Add-Member -MemberType ScriptProperty -Name State -Value { Get-NodeState -Node $this }
