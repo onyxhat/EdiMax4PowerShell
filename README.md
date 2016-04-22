@@ -30,6 +30,6 @@ Retrieve registered nodes using __Get-EdiMaxNodes__ which will return the array 
 
 
 ###Control Methods
-* On() - Change State() to "On"
-* Off() - Change State() to "Off"
-* Toggle() - Invert State(); On=>Off, Off=>On
+* __On()__ - Change State() to "On"
+* __Off()__ - Change State() to "Off"
+* __Toggle()__ - Invert State(); On=>Off, Off=>On
